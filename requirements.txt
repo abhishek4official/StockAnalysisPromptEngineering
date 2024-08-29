@@ -1,0 +1,4 @@
+generativeai
+pandas
+ta
+yfinance
