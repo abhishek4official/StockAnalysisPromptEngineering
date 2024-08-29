@@ -1,6 +1,6 @@
 # Stock Analysis Tool
 
-This project is a Python-based stock analysis tool that processes stock symbols, downloads data, calculates indicators, and generates insights. The results are saved in both JSON and Markdown formats.
+This project is a Python-based stock analysis tool that leverages the Google Gemini API to analyze stock symbols using prompt engineering. It processes stock data, calculates indicators, and generates insights. The results are saved in both JSON and Markdown formats.
 
 ## Features
 
@@ -34,13 +34,14 @@ This project is a Python-based stock analysis tool that processes stock symbols,
 
 ## Usage
 
+1. Add a file named apiKey.key and save your Gemeni API key
 
-1. Run the script:
+2. Run the script:
     ```sh
     python main.py
     ```
 
-2. The results will be saved in JSON and Markdown formats with the stock symbol as the filename.
+3. The results will be saved in JSON and Markdown formats with the stock symbol as the filename.
 
 ## Example
 
@@ -59,4 +60,4 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## Contact
 
-For any questions or suggestions, please contact [yourname](mailto:youremail@example.com).
+For any questions or suggestions, please contact [yourname](mailto:abhishek4official@gmail.com).
