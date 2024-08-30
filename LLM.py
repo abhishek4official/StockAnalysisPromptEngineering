@@ -26,9 +26,8 @@ class LLM:
         monthly_reward_amount = stock_analysis.monthly_reward_amount
 
         prompt = f"""
-        Asume As: You are a stock expert and skilled trader. You have been analyzing the stock market for the past 10 years.
-        Based on the historical stock data and technical analysis, here are the key metrics for the given stock over the past two weeks:
-        Data for the past 14 days:
+        You are a stock expert and skilled trader with over 10 years of experience in analyzing the stock market. Based on the historical stock data and technical analysis provided below, evaluate the current state of my stock investment and provide a detailed analysis of the expected performance, volatility, and potential gains or losses over the next 7 days (weekly) and 30 days (monthly). Use the following key metrics for the past two weeks:
+        
         **RSI (Relative Strength Index)**:
         {df['rsi'].tail(14).to_list()}
 
@@ -69,11 +68,7 @@ class LLM:
 
         
         Question:
-        Analyze the current state of my stock investment by evaluating its risk and reward factors. Provide a detailed analysis of the expected performance, volatility, and potential gains or losses over the next 7 days (weekly) and 30 days (monthly)
-        Reply with 3 sections: Current Situation, Potential Scenarios, Overall Rating, Expected Returns
-        It would be good to have probability of each sinario.
-        Also Rate the stock as 1-10 where 1 is the least and 10 is the highest to buy the stock.
-        Please provide the insights in the following format: 
+        Reply with the following sections: Current Situation, Potential Scenarios, Overall Rating, Expected Returns. Include the probability of each scenario (Uptrend, Downtrend, Neutral Trend) and provide a rating from 1 to 10 (1 being the least and 10 being the highest) on whether to buy the stock. Please format your insights in the following JSON structure:
         {{
             "markdown": "your analysis of stock in markdown",
             "Uptrend": probability of upternd,
