@@ -3,6 +3,11 @@ import pandas as pd
 import ta  # Technical Analysis library
 import yfinance as yf
 import datetime
+import os
+import csv
+import sqlite3
+
+import DataAccess
 
 
 class StockAnalysis:
@@ -20,11 +25,60 @@ class StockAnalysis:
 
     def download_data(self):
         start_date = datetime.date.today() - datetime.timedelta(days=365)
-        end_date = datetime.date.today()
-        self.data = yf.download(self.symbol, start=start_date, end=end_date)
-        self.df = pd.DataFrame(self.data)
+        
+        # Create an instance of DataAccess
+        data_access = DataAccess.DataAccess()
+        data_access.connect()
+        data_access.create_table()
+        
+        # Check if data exists for the symbol in the database
+        if data_access.check_data_exists(self.symbol):
+            # Get the latest date from the database
+            latest_date = data_access.get_latest_date(self.symbol)
+            
+            # Check if the latest date is today
+            if latest_date < datetime.date.today() - datetime.timedelta(days=1):
+                # Download data for the entire period
+                start_date = datetime.date.today() - datetime.timedelta(days=365)
+                end_date = datetime.date.today()
+                self.data = yf.download(self.symbol, start=start_date, end=end_date)
+                self.df = pd.DataFrame(self.data)
+
+                # Insert data into the database
+                for index, row in self.df.iterrows():
+                    data_access.insert_data(index, row, self.symbol)
+
+                # Commit the changes to the database
+                data_access.commit_changes()
+ 
+        else:
+            # Download data for the entire period
+            end_date = datetime.date.today()
+            self.data = yf.download(self.symbol, start=start_date, end=end_date)
+            self.df = pd.DataFrame(self.data)
+            
+            for index, row in self.df.iterrows():
+                data_access.insert_data(index, row, self.symbol)
+            
+            # Commit the changes to the database
+            data_access.commit_changes()
+
+        # Load data from the database for the last 1 year
+        self.df = data_access.load_data(self.symbol, start_date)
+
+        # Close the database connection
+        data_access.close_connection()
 
     def calculate_indicators(self):
+        window = 20  # Set the window value according to your requirements
+        self.df['sma'] = ta.trend.SMAIndicator(self.df['Close'], window=window).sma_indicator()
+        bb=ta.volatility.BollingerBands(self.df['Close'])
+        self.df['bbands_middle']=bb.bollinger_mavg()
+        self.df['bbands_upper']= bb.bollinger_hband()
+        self.df['bbands_lower'] =bb.bollinger_lband()
+        self.df['atr'] = ta.volatility.AverageTrueRange(self.df['High'], self.df['Low'], self.df['Close']).average_true_range()
+        self.df['obv'] = ta.volume.OnBalanceVolumeIndicator(self.df['Close'], self.df['Volume']).on_balance_volume()
+        self.df['roc'] = ta.momentum.ROCIndicator(self.df['Close']).roc()
         self.df['rsi'] = ta.momentum.RSIIndicator(self.df['Close']).rsi()
         macd = ta.trend.MACD(self.df['Close'])
         self.df['macd'] = macd.macd()

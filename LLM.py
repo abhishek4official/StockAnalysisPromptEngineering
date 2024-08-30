@@ -45,6 +45,26 @@ class LLM:
 
         **ADX (Average Directional Index)**:
         {df['adx'].tail(14).to_list()}
+        
+        **ATR (Average True Range)**:
+        {df['atr'].tail(14).to_list()}
+        
+        **Bollinger Bands**:
+        Upper Band: {df['bbands_upper'].tail(14).to_list()}
+        Middle Band: {df['bbands_middle'].tail(14).to_list()}
+        Lower Band: {df['bbands_lower'].tail(14).to_list()}
+
+        **On-Balance Volume (OBV)**:
+        {df['obv'].tail(14).to_list()}
+
+        **Rate of Change (ROC)**:
+        {df['roc'].tail(14).to_list()}
+
+        **Weekly Return**:
+        {df['weekly_return'].tail(14).to_list()}
+
+        **Monthly Return**:
+        {df['monthly_return'].tail(14).to_list()}
 
         Risk and Reward Analysis:
         - **Weekly Risk**: {weekly_risk * 100:.2f}%
