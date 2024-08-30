@@ -2,3 +2,4 @@ generativeai
 pandas
 ta
 yfinance
+sqlite3
