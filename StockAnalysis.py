@@ -99,11 +99,15 @@ class StockAnalysis:
         self.monthly_reward_amount = self.investment_amount * self.monthly_reward
 
     def get_results(self):
-        return {
-            'Weekly Risk (%)': self.weekly_risk * 100,
-            'Monthly Risk (%)': self.monthly_risk * 100,
-            'Weekly Reward (₹)': self.weekly_reward_amount,
-            'Monthly Reward (₹)': self.monthly_reward_amount
+        results= {
+            'Weekly Risk (%)': str(self.weekly_risk * 100),
+            'Monthly Risk (%)': str(self.monthly_risk * 100),
+            'Weekly Reward (₹)': str(self.weekly_reward_amount),
+            'Monthly Reward (₹)': str(self.monthly_reward_amount)
         }
+        result_string = ""
+        for key, value in results.items():
+            result_string += f"{key}: {value}\n"
+        return result_string
 
 
