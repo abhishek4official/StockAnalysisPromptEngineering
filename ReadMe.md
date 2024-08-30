@@ -2,6 +2,13 @@
 
 This project is a Python-based stock analysis tool that leverages the Google Gemini API to analyze stock symbols using prompt engineering. It processes stock data, calculates indicators, and generates insights. The results are saved in both JSON and Markdown formats.
 
+`Note:` The code is specific for the Indian NSE stock exchange but if you want to configure it you just need to remove '.NS' is main.py on line 9
+```sh
+    # Remove .NS any you can pass any yahoo finance compatible symbol
+    stock_analysis = StockAnalysis.StockAnalysis(symbol=f"{stock_code}.NS")
+```
+
+
 ## Features
 
 - Download stock data
