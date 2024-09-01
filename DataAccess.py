@@ -1,4 +1,5 @@
 import datetime
+import json
 import os
 import sqlite3
 
@@ -48,15 +49,32 @@ class DataAccess:
                 
             def create_prompt_table(self):
                 self.cursor.execute('''CREATE TABLE IF NOT EXISTS PromptLog
-                                          (Symbol TEXT, Prompt TEXT, Insights TEXT, Date TEXT)''')
+                                          (Symbol TEXT, Prompt TEXT, Insights TEXT, Date TEXT,Markdown TEXT, Uptrend REAL, Downtrend REAL, NeutralTrend REAL)''')
 
-            def insert_prompt_data(self, stock_code, prompt, insights, date):
-                self.cursor.execute("INSERT INTO PromptLog VALUES (?, ?, ?, ?)",
-                                        (stock_code, prompt, insights, date))
+            def insert_prompt_data(self, stock_code, prompt, insights_llm, date):
+                insights = json.loads(insights_llm)
+    
+                    # Extract values with default fallback
+                markdown = insights.get("markdown", "")
+                uptrend = float(insights.get("Uptrend", None))
+                if uptrend is not None and uptrend < 1:
+                    uptrend *= 100
+                
+                downtrend = float(insights.get("DownTrend", None))
+                if downtrend is not None and downtrend < 1:
+                    downtrend *= 100
+                
+                neutraltrend = float(insights.get("NeutralTrend", None))
+                if neutraltrend is not None and neutraltrend < 1:
+                    neutraltrend *= 100
+                # Combine insights into a single string
+                    
+                self.cursor.execute("INSERT INTO PromptLog VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                                        (stock_code, prompt, insights_llm, date,markdown, uptrend, downtrend, neutraltrend))
                 self.conn.commit()
                 
             def get_Insights_stockcode(self, date, stock_code):
                 #date = date.date()  # Extract only the date part
                 self.cursor.execute("SELECT * FROM PromptLog WHERE Date=? AND Symbol=?", (date, stock_code))
                 rows = self.cursor.fetchall()
-                return pd.DataFrame(rows, columns=['Symbol', 'Prompt', 'Insights', 'Date'])
+                return pd.DataFrame(rows, columns=['Symbol', 'Prompt', 'Insights', 'Date', 'Markdown', 'Uptrend', 'Downtrend', 'NeutralTrend'])

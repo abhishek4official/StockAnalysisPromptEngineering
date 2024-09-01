@@ -22,6 +22,7 @@ def process_stock_code(stock_code):
         stock_analysis.calculate_indicators()
         stock_analysis.calculate_risk_reward()
         results = stock_analysis.get_results()
+        #stock_analysis.get_ARIMA_AND_GARCH_Forcast()
 
         prompt = llm.generate_prompt(stock_analysis)
         insights = llm.get_insights(prompt)
@@ -67,4 +68,8 @@ def save_data(stock_code, insights):
 
 if __name__ == "__main__":
     stock_code = input("Enter the stock code: ")  # Ask for stock code from user
+    stock_code = stock_code.upper()
+    print("Waiting...")
     process_stock_code(stock_code)
+    print("Data saved successfully!")
+    

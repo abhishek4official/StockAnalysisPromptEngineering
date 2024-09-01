@@ -15,7 +15,8 @@ class LLM:
                 "top_k": 64,
                 "max_output_tokens": 8192,
                 "response_mime_type": "application/json"
-            }
+            },
+            system_instruction="ACT as stock market expert and skilled trader with over 10 years of experience in  analyzing Indian Market stock market",
         )
 
     def generate_prompt(self, stock_analysis):
@@ -26,7 +27,9 @@ class LLM:
         monthly_reward_amount = stock_analysis.monthly_reward_amount
 
         prompt = f"""
-        You are a stock expert and skilled trader with over 10 years of experience in analyzing the stock market. Based on the historical stock data and technical analysis provided below, evaluate the current state of my stock investment and provide a detailed analysis of the expected performance, volatility, and potential gains or losses over the next 7 days (weekly) and 30 days (monthly). Use the following key metrics for the past two weeks:
+        Role: You are a financial analyst specializing in the Indian stock market.
+
+        Context: You have access to the following Technical Indecator data for a stock listed on an Indian exchange (e.g., NSE or BSE):
         
         **RSI (Relative Strength Index)**:
         {df['rsi'].tail(14).to_list()}
@@ -65,24 +68,35 @@ class LLM:
 
         **Monthly Return**:
         {df['monthly_return'].tail(14).to_list()}
+        
+       
 
         
-        Question:
-        Reply with the following sections: Current Situation, Potential Scenarios, Overall Rating, Expected Returns. Include the probability of each scenario (Uptrend, Downtrend, Neutral Trend) and provide a rating from 1 to 10 (1 being the least and 10 being the highest) on whether to buy the stock. Please format your insights in the following JSON structure:
+        Tasks:
+
+        Basic Analysis: Analyze the stock's historical performance by identifying key trends, patterns, and notable movements. Focus on elements specific to the Indian market context.
+        Performance Rating: Provide a rating of the stock’s performance on a scale of 1-10, where 1 indicates very poor performance and 10 indicates excellent performance. Justify your rating.
+        Outcome Assessment: Estimate the probability percentages for three possible outcomes over the next  7 days and 30 days
+        Positive: Increase in stock price
+        Negative: Decrease in stock price
+        Neutral: Little or no change in stock price
+        Return Calculation: Calculate the probable return (gain) and loss (decline) percentages for each outcome (positive, negative, neutral), considering market-specific factors in India.
+        Reasoning Explanation: Explain the reasoning behind your analysis, rating, probability assessments, and return calculations. Consider the provided historical data, technical indicators, and relevant market conditions (e.g., recent economic events, government policies, sector-specific news)
+        Please format your insights in the following JSON structure:
         {{
             "markdown": "your analysis of stock in markdown",
             "Uptrend": probability of upternd,
             "DownTrend": probability of DownTrend,
             "NeutralTrend": probability of Neutral trend,
         }}
-        Add the trend Probability in markdown too insted of risk and reward.
+        
         """
         return prompt
-    # Risk and Reward Analysis:
-    #     - **Weekly Risk**: {weekly_risk * 100:.2f}%
-    #     - **Monthly Risk**: {monthly_risk * 100:.2f}%
-    #     - **Weekly Reward**: ₹{weekly_reward_amount:.2f}
-    #     - **Monthly Reward**: ₹{monthly_reward_amount:.2f}
+        # **ARIMA Forcast**:
+        # {stock_analysis.forcastedPrice.to_list()}
+        
+        # **GARCH Volatility**:
+        # {stock_analysis.forcastedVolatility.tolist()}
 
     def get_insights(self, prompt):
         chat_session = self.model.start_chat(history=[])

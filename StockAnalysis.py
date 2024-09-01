@@ -6,6 +6,9 @@ import datetime
 import os
 import csv
 import sqlite3
+from statsmodels.tsa.arima.model import ARIMA
+from statsmodels.tsa.stattools import adfuller
+from arch import arch_model
 
 import DataAccess
 
@@ -110,4 +113,49 @@ class StockAnalysis:
             result_string += f"{key}: {value}\n"
         return result_string
 
+    def get_ARIMA_AND_GARCH_Forcast(self):
+        # Step 2: Prepare the data for ARIMA modeling
+        close_prices = self.df['Close']
+        close_prices = pd.to_numeric(close_prices, errors='coerce')
+        close_prices = close_prices.dropna()
 
+        # Step 3: Check for stationarity
+        result = adfuller(close_prices)
+        print('ADF Statistic:', result[0])
+        print('p-value:', result[1])
+
+        if result[1] > 0.05:
+            print("Series is not stationary. Differencing the series.")
+            close_prices_diff = close_prices.diff().dropna()
+        else:
+            close_prices_diff = close_prices
+
+        # Step 4: Fit the ARIMA model
+        try:
+            model = ARIMA(close_prices_diff, order=(5, 1, 0))  # Adjust (p, d, q) as needed
+            model_fit = model.fit()
+        except Exception as e:
+            print(f"Error fitting ARIMA model: {e}")
+        print("2")
+        # Step 5: Fit the GARCH model to the residuals of the ARIMA model
+        residuals = model_fit.resid
+        garch_model = arch_model(residuals, vol='Garch', p=1, q=1)
+        garch_fit = garch_model.fit(disp='off')
+
+        # Step 6: Forecast future values using ARIMA
+        forecast_steps = 30  # Number of days to forecast
+        forecast_diff = model_fit.forecast(steps=forecast_steps)
+        last_value = close_prices.iloc[-1]
+        forecast = last_value + forecast_diff.cumsum()
+        print("2")
+        # Step 7: Forecast volatility using GARCH
+        garch_forecast = garch_fit.forecast(horizon=forecast_steps)
+        volatility = garch_forecast.variance.values[-1, :]
+        
+        self.forcastedPrice=forecast.tail(forecast_steps)
+        
+        self.forcastedVolatility = volatility[-forecast_steps:]
+        print("1")
+        
+        
+        
