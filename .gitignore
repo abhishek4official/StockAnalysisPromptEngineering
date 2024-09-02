@@ -3,3 +3,4 @@ importFix.py
 DB/
 Markdown/
 data/
+__pycache__/
