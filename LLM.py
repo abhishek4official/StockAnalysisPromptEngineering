@@ -89,6 +89,31 @@ class LLM:
             "DownTrend": probability of DownTrend,
             "NeutralTrend": probability of Neutral trend,
         }}
+        Structure Markdown as follows:
+        **Overall Trend**
+        **Key Observations**
+        **Overall**
+        **Performance Rating**
+        **Probability Assessment:**
+        * **7 Days:**
+            * **Positive:** 
+            * **Negative:** 
+            * **Neutral:** 
+        * **30 Days:**
+            * **Positive:** 
+            * **Negative:** 
+            * **Neutral:** 
+        **Return Calculation:**
+
+        * **Positive:**
+            * **7 Days:** 
+            * **30 Days:** 
+        * **Negative:**
+            * **7 Days:**
+            * **30 Days:** 
+        * **Neutral:**
+            * **7 Days:** 
+            * **30 Days:** 
         
         """
         return prompt
