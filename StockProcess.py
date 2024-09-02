@@ -88,6 +88,6 @@ class StockProcessor:
         
         
         data_access.connect()
-        df = data_access.load_data()
+        df = data_access.get_all_Insights()
         data_access.close_connection()
         return df

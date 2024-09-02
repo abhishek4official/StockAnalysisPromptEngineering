@@ -78,3 +78,9 @@ class DataAccess:
                 self.cursor.execute("SELECT * FROM PromptLog WHERE Date=? AND Symbol=?", (date, stock_code))
                 rows = self.cursor.fetchall()
                 return pd.DataFrame(rows, columns=['Symbol', 'Prompt', 'Insights', 'Date', 'Markdown', 'Uptrend', 'Downtrend', 'NeutralTrend'])
+            
+            def get_all_Insights(self):
+                #date = date.date()  # Extract only the date part
+                self.cursor.execute("SELECT * FROM PromptLog")
+                rows = self.cursor.fetchall()
+                return pd.DataFrame(rows, columns=['Symbol', 'Prompt', 'Insights', 'Date', 'Markdown', 'Uptrend', 'Downtrend', 'NeutralTrend'])
