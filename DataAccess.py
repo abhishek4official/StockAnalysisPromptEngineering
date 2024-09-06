@@ -30,11 +30,18 @@ class DataAccess:
                 self.cursor.execute("SELECT MAX(Date) FROM StockData WHERE Symbol=?", (symbol,))
                 latest_date = self.cursor.fetchone()[0]
                 return datetime.datetime.strptime(latest_date, "%Y-%m-%d").date()
+            
+            def check_data_exists_for_date(self, symbol, date):
+                self.cursor.execute("SELECT COUNT(*) FROM StockData WHERE Symbol=? AND Date=?", (symbol, date))
+                result = self.cursor.fetchone()
+                return result[0] > 0
 
             def insert_data(self, index, row, symbol):
-                self.cursor.execute("INSERT INTO StockData VALUES (?, ?, ?, ?, ?, ?, ?)",
-                                    (index.strftime("%Y-%m-%d"), row['Open'], row['High'], row['Low'], row['Close'],
-                                     row['Volume'], symbol))
+                if self.check_data_exists_for_date(symbol,index.strftime("%Y-%m-%d")) == False:
+                    self.cursor.execute("INSERT INTO StockData VALUES (?, ?, ?, ?, ?, ?, ?)",
+                                        (index.strftime("%Y-%m-%d"), row['Open'], row['High'], row['Low'], row['Close'], row['Volume'], symbol))
+               
+                    
 
             def load_data(self, symbol, start_date):
                 self.cursor.execute("SELECT * FROM StockData WHERE Symbol=? AND Date>=?", (symbol, start_date))
@@ -84,3 +91,20 @@ class DataAccess:
                 self.cursor.execute("SELECT * FROM PromptLog")
                 rows = self.cursor.fetchall()
                 return pd.DataFrame(rows, columns=['Symbol', 'Prompt', 'Insights', 'Date', 'Markdown', 'Uptrend', 'Downtrend', 'NeutralTrend'])
+            
+            def get_records_by_stock_code(self, stock_code):
+                self.cursor.execute("SELECT * FROM StockData WHERE Symbol=? ", (stock_code + ".NS",))
+                stock_data_rows = self.cursor.fetchall()
+                stock_data_df = pd.DataFrame(stock_data_rows, columns=['Date', 'Open', 'High', 'Low', 'Close', 'Volume', 'Symbol'])
+                stock_data_df['Date'] = pd.to_datetime(stock_data_df['Date'], format='%Y-%m-%d')
+
+                # Sort the DataFrame by Date in descending order
+                stock_data_df = stock_data_df.sort_values(by='Date', ascending=False)
+
+                # Take only the first 60 records
+                stock_data_df = stock_data_df.head(60)
+                self.cursor.execute("SELECT * FROM PromptLog WHERE Symbol=? ORDER BY Date DESC", (stock_code,))
+                prompt_log_rows = self.cursor.fetchall()
+                prompt_log_df = pd.DataFrame(prompt_log_rows, columns=['Symbol', 'Prompt', 'Insights', 'Date', 'Markdown', 'Uptrend', 'Downtrend', 'NeutralTrend'])
+
+                return stock_data_df, prompt_log_df

@@ -91,3 +91,17 @@ class StockProcessor:
         df = data_access.get_all_Insights()
         data_access.close_connection()
         return df
+    def get_stock_data(self,stock_code):
+        
+        data_access = None
+        if(self.dbType  == "MSSQL"):
+            data_access = MSSQL.MSSQLDataAccess()
+        else:
+            data_access = DataAccess.DataAccess()
+        
+        
+        data_access.connect()
+        df_stock_data_df, prompt_log_df = data_access.get_records_by_stock_code(stock_code)
+        data_access.close_connection()
+        return df_stock_data_df, prompt_log_df 
+    
