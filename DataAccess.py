@@ -10,6 +10,11 @@ class DataAccess:
             def __init__(self):
                 self.conn = None
                 self.cursor = None
+                self.regxExtract = [
+                                        r'(?i)(?:performance rating\W*|rating\W*)(\d+)',
+                                        r'Performance Rating[:\s]*([\d]+)|Performance Rating[:\s]*([\d]+)[\/\s]*([\d]+)|rated\s*\*?(\d+)\*?\s*out of\s*\d+',
+                                        r'Performance Rating\s*:\s*(\d+)\s*(?:out of 10)?',
+                                    ]
 
             def connect(self):
                 if not os.path.exists('db'):
@@ -88,9 +93,27 @@ class DataAccess:
             
             def get_all_Insights(self):
                 #date = date.date()  # Extract only the date part
-                self.cursor.execute("SELECT * FROM PromptLog")
+                today = datetime.date.today()
+                self.cursor.execute("SELECT * FROM PromptLog WHERE Date=?", (today,))
                 rows = self.cursor.fetchall()
-                return pd.DataFrame(rows, columns=['Symbol', 'Prompt', 'Insights', 'Date', 'Markdown', 'Uptrend', 'Downtrend', 'NeutralTrend'])
+                result=pd.DataFrame(rows, columns=['Symbol', 'Prompt', 'Insights', 'Date', 'Markdown', 'Uptrend', 'Downtrend', 'NeutralTrend'])
+                if(len(result)==0):
+                    self.cursor.execute("SELECT * FROM PromptLog")
+                    rows = self.cursor.fetchall()
+                    result=pd.DataFrame(rows, columns=['Symbol', 'Prompt', 'Insights', 'Date', 'Markdown', 'Uptrend', 'Downtrend', 'NeutralTrend'])
+                
+                extracted_ratings = pd.DataFrame()
+
+                # Iterate over each regex pattern and extract the ratings
+                for pattern in self.regxExtract:
+                    extracted_ratings = extracted_ratings.combine_first(result['Markdown'].str.extract(pattern))
+
+                result['rating'] = extracted_ratings.bfill(axis=1).iloc[:, 0]
+                # Replace NaN values in the 'rating' column with 0
+                result['rating'] = result['rating'].fillna(0)
+                # Convert the extracted rating to numeric type
+                result['rating'] = pd.to_numeric(result['rating'], errors='coerce')
+                return result
             
             def get_records_by_stock_code(self, stock_code):
                 self.cursor.execute("SELECT * FROM StockData WHERE Symbol=? ", (stock_code + ".NS",))
@@ -103,8 +126,19 @@ class DataAccess:
 
                 # Take only the first 60 records
                 stock_data_df = stock_data_df.head(60)
-                self.cursor.execute("SELECT * FROM PromptLog WHERE Symbol=? ORDER BY Date DESC", (stock_code,))
+                today = datetime.date.today()
+                self.cursor.execute("SELECT * FROM PromptLog WHERE Symbol=? AND Date=?", (stock_code, today))
                 prompt_log_rows = self.cursor.fetchall()
                 prompt_log_df = pd.DataFrame(prompt_log_rows, columns=['Symbol', 'Prompt', 'Insights', 'Date', 'Markdown', 'Uptrend', 'Downtrend', 'NeutralTrend'])
+                
+                extracted_ratings = pd.DataFrame()
 
+                # Iterate over each regex pattern and extract the ratings
+                for pattern in self.regxExtract:
+                    extracted_ratings = extracted_ratings.combine_first(prompt_log_df['Markdown'].str.extract(pattern))
+
+                prompt_log_df['rating'] = extracted_ratings.bfill(axis=1).iloc[:, 0]
+                prompt_log_df['rating'] = prompt_log_df['rating'].fillna(0)
+                # Convert the extracted rating to numeric type
+                prompt_log_df['rating'] = pd.to_numeric(prompt_log_df['rating'], errors='coerce')
                 return stock_data_df, prompt_log_df

@@ -8,11 +8,17 @@ import os
 from rich.console import Console
 from rich.markdown import Markdown
 import MSSQL
+from transformers import T5Tokenizer, T5ForConditionalGeneration
+
 
 class StockProcessor:
     def __init__(self):
         self.console = Console()
         self.dbType = "sqlite"
+        
+        self.tokenizer = T5Tokenizer.from_pretrained('t5-small')
+        self.model = T5ForConditionalGeneration.from_pretrained('t5-small')
+
 
     def process_stock_code(self, stock_code):
         
@@ -102,6 +108,23 @@ class StockProcessor:
         
         data_access.connect()
         df_stock_data_df, prompt_log_df = data_access.get_records_by_stock_code(stock_code)
+        # Iterate Prompt log and Add New column Summery
+        prompt_log_df['Summary'] = prompt_log_df['Markdown'].apply(self.summarize_text)
+
         data_access.close_connection()
         return df_stock_data_df, prompt_log_df 
+        data_access.close_connection()
+        return df_stock_data_df, prompt_log_df 
+    
+    def summarize_text(self, text):
+        # Encode the text
+        inputs = self.tokenizer.encode("summarize: " + text, return_tensors="pt", max_length=512, truncation=True)
+
+        # Generate the summary
+        outputs = self.model.generate(inputs, max_length=150, min_length=40, length_penalty=2.0, num_beams=4, early_stopping=True)
+
+        # Decode the summary
+        summary = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+
+        return summary
     
