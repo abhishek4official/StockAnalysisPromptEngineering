@@ -77,11 +77,13 @@ def process_stock_code(stock_code):
 #         md_file.write(markdown_text)
 
 if __name__ == "__main__":
-    stock_code = input("Enter the stock code: ")  # Ask for stock code from user
-    stock_code = stock_code.upper()
-    
-    sp=StockProcessor()
-    print("Waiting...")
-    sp.process_stock_code(stock_code)
-    print("______________________________________________________________")
+    stock_code=''
+    while stock_code != 'exit' or stock_code != 'e':
+        stock_code = input("Enter the stock code: ")  # Ask for stock code from user
+        stock_code = stock_code.upper()
+        
+        sp=StockProcessor()
+        print("Waiting...")
+        sp.process_stock_code(stock_code)
+        print("______________________________________________________________")
     

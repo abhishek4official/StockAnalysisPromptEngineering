@@ -1,11 +1,20 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory, render_template,abort,url_for
+
 from flasgger import Swagger
+from flask_cors import CORS
 from StockProcess import StockProcessor
+import os
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='react-app/static')
 swagger = Swagger(app)
+CORS(app)
 stock_processor = StockProcessor()
-
+@app.route('/')
+def serve_index():
+    return render_template('index.html')
+@app.route('/stfiles/<path:path>')
+def stfiles(path):
+  return send_from_directory('react-app/static/', path)
 @app.route('/process_stock_code', methods=['POST'])
 def process_stock_code():
     """
@@ -62,5 +71,30 @@ def load_data():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
+@app.route('/get_stock_data', methods=['POST'])
+def get_stock_data():
+    """
+    Get stock data
+    ---
+    parameters:
+      - name: stock_code
+        in: query
+        type: string
+        required: true
+        description: The stock code to get data for
+    responses:
+      200:
+        description: Stock data retrieved
+    """
+    try:
+        data = request.get_json()
+        stock_code = data.get('stock_code')
+        df_stock_data_df, prompt_log_df  = stock_processor.get_stock_data(stock_code)
+        print(df_stock_data_df)
+        return jsonify({"stock": df_stock_data_df.to_dict(orient='records'), "prompt": prompt_log_df.to_dict(orient='records')}), 200
+    except Exception as e:
+        print(e)
+        return jsonify({"error": str(e)}), 500
 if __name__ == '__main__':
     app.run(debug=True)
